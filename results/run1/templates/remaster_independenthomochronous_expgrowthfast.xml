@@ -1,0 +1,24 @@
+<!-- Coalescent tree simulation under exponential growth model. If a population size of 10 is reached, the population will switch to a constant size model with size 10. The time point when this change happens has to be calculated manually. -->
+
+<beast version="2.0"
+       namespace="beast.base.inference.parameter:remaster
+                  :beast.base.evolution.tree.coalescent
+                  :feast.popmodels">
+  <run spec="Simulator" nSims="{$nreplicates}">
+    <simulate id="tree" spec="SimulatedTree">
+      <trajectory id="traj" spec="CoalescentTrajectory" maxTrajLogAge="10" loggingGridSize="1000">
+        <population id="pop" spec="CompoundPopulationModel" changeTimes="264.91">
+          <populationModel spec="ExponentialGrowth" popSize="2000.0" growthRate="0.02"/>
+          <populationModel spec="ConstantPopulation" popSize="10.0"/>
+        </population>
+        <reaction spec="PunctualReaction" n="250" times="0">0 -> pop</reaction>
+      </trajectory>
+    </simulate>
+
+    <logger fileName="{$filebase}/independenthomochronous/expgrowthfast/expgrowthfast.trees" mode="tree">
+      <log spec="TypedTreeLogger" tree="@tree"/>
+    </logger>
+
+    <logger fileName="{$filebase}/independenthomochronous/expgrowthfast/expgrowthfast.traj" log="@traj"/>
+  </run>
+</beast>

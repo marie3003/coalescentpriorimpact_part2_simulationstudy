@@ -1,0 +1,19 @@
+# Conda environment used by the Snakefile (`conda run -n beast_tools ...`) for
+# scripts/MakeBEASTXML.py, scripts/compute_errors.py and scripts/compute_time_bins.py.
+# The notebook packages at the bottom are only needed to run workflows/*.ipynb.
+#
+# Create with:  conda env create -f environment.yaml
+name: beast_tools
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy=2.3
+  - pandas=2.3
+  - biopython=1.85
+  - pyyaml=6.0
+  # notebooks (workflows/*.ipynb, evaluation_helpers.py)
+  - matplotlib=3.10
+  - seaborn=0.13
+  - scipy=1.14
+  - ipykernel

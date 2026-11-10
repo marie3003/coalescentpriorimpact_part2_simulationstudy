@@ -1,0 +1,20 @@
+<!-- Basic coalescent tree simulation -->
+
+<beast version="2.0"
+       namespace="beast.base.inference.parameter:remaster
+                  :beast.base.evolution.tree.coalescent">
+  <run spec="Simulator" nSims="{$nreplicates}">
+    <simulate id="tree" spec="SimulatedTree">
+      <trajectory id="traj" spec="CoalescentTrajectory" maxTrajLogAge="10" loggingGridSize="1000">
+        <population id="pop" spec="ConstantPopulation" popSize="1000.0"/>
+        <reaction spec="Reaction" rate="2.5 0.0" changeTimes="100"> 0 -> pop </reaction>
+      </trajectory>
+    </simulate>
+
+    <logger fileName="{$filebase}/linearconstant/uniform/uniform.trees" mode="tree">
+      <log spec="TypedTreeLogger" tree="@tree"/>
+    </logger>
+
+    <logger fileName="{$filebase}/linearconstant/uniform/uniform.traj" log="@traj"/>
+  </run>
+</beast>

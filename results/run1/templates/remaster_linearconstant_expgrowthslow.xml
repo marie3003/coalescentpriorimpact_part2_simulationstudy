@@ -1,0 +1,28 @@
+<!-- Coalescent tree simulation under exponential growth model. If a population size of 10 is reached, the population will switch to a constant size model with size 10. The time point when this change happens has to be calculated manually. -->
+
+<beast version="2.0"
+       namespace="beast.base.inference.parameter:remaster
+                  :beast.base.evolution.tree.coalescent
+                  :feast.popmodels">
+  <run spec="Simulator" nSims="{$nreplicates}">
+    <simulate id="tree" spec="SimulatedTree">
+      <trajectory id="traj" spec="CoalescentTrajectory" maxTrajLogAge="10" loggingGridSize="1000">
+        <population id="pop" spec="CompoundPopulationModel" changeTimes="529.83">
+          <populationModel spec="ExponentialGrowth" popSize="2000.0" growthRate="0.01"/>
+          <populationModel spec="ConstantPopulation" popSize="10.0"/>
+        </population>
+        <reaction spec="Reaction"
+          rate="3.93523281 3.89607659 3.85730998 3.81892910 3.78093012 3.74330924 3.70606269 3.66918675 3.63267773 3.59653199 3.56074589 3.52531588 3.49023840 3.45550995 3.42112705 3.38708627 3.35338420 3.32001747 3.28698274 3.25427672 3.22189612 3.18983772 3.15809830 3.12667470 3.09556377 3.06476239 3.03426750 3.00407603 2.97418498 2.94459134 2.91529217 2.88628453 2.85756552 2.82913226 2.80098193 2.77311169 2.74551877 2.71820040 2.69115385 2.66437643 2.63786544 2.61161824 2.58563220 2.55990473 2.53443325 2.50921522 2.48424811 2.45952943 2.43505671 2.41082749 2.38683935 2.36308990 2.33957677 2.31629759 2.29325004 2.27043182 2.24784065 2.22547426 2.20333042 2.18140692 2.15970156 2.13821217 2.11693660 2.09587273 2.07501845 2.05437167 2.03393033 2.01369238 1.99365581 1.97381860 1.95417878 1.93473438 1.91548345 1.89642407 1.87755433 1.85887236 1.84037627 1.82206422 1.80393438 1.78598493 1.76821408 1.75062006 1.73320110 1.71595546 1.69888142 1.68197726 1.66524131 1.64867188 1.63226732 1.61602599 1.59994626 1.58402653 1.56826521 1.55266071 1.53721147 1.52191596 1.50677265 1.49178001 1.47693655 1.46224079 0.00000000"
+          changeTimes="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100">
+          0 -> pop
+        </reaction>
+      </trajectory>
+    </simulate>
+
+    <logger fileName="{$filebase}/linearconstant/expgrowthslow/expgrowthslow.trees" mode="tree">
+      <log spec="TypedTreeLogger" tree="@tree"/>
+    </logger>
+
+    <logger fileName="{$filebase}/linearconstant/expgrowthslow/expgrowthslow.traj" log="@traj"/>
+  </run>
+</beast>
