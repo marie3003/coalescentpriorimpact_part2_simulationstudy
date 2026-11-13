@@ -44,7 +44,7 @@ This gives 2 × 4 × 3 × 2 × 100 = 4,800 XMLs and 14,400 BEAST jobs.
 | 8 | `process_results` | `evaluation/{sampling}/{popmodel}/{low,med,high}.tsv`, `evaluation/successful_counts.tsv` |
 | 9 | `subsample_runs` | `*.T{i}.subsampled.log`, `.subsampled.trees` (~1000 samples) |
 | 10 | `compute_errors` | `evaluation/.../*_node_errors.tsv`, `*_pop_summary.pkl`, `*_pop_trajectory.tsv` |
-| 11 | `compute_time_bins` | `evaluation/.../*_time_bins_w{bw}_c{cutoff}[_per_tree\|_long_bl\|_long_bl_per_tree].tsv` |
+| 11 | `compute_time_bins` | `evaluation/.../*_time_bins_w{bw}_c{cutoff}[_per_tree].tsv` |
 
 All paths are relative to `results/run1/`. A replicate is only evaluated (steps 8–11) if **both** the `constcoal` and the `skyline` run passed the ESS check.
 

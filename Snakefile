@@ -94,7 +94,7 @@ def get_burnin(wildcards):
 # Rule all — final targets
 # Final outputs per (sampling, popmodel, mutsig) scenario in EVAL_DIR:
 #   *_node_errors.tsv, *_pop_summary.pkl, *_pop_trajectory.tsv  (compute_errors)
-#   *_time_bins_w{bw}_c{cutoff}[_per_tree|_long_bl|_long_bl_per_tree].tsv
+#   *_time_bins_w{bw}_c{cutoff}[_per_tree].tsv
 #                                                               (compute_time_bins)
 # =============================================================================
 EVAL_DIR     = BEAST_DIR.replace("beast_inference", "evaluation")
@@ -142,18 +142,6 @@ rule all:
             for bw, co in TIME_BIN_CONFIGS[popmodel]
         ] + [
             f"{EVAL_DIR}/{sampling}/{popmodel}/{sampling}_{popmodel}_{mutsig}_time_bins_w{int(bw)}_c{int(co)}_per_tree.tsv"
-            for sampling in SAMPLING_TYPES
-            for popmodel in POP_MODELS
-            for mutsig in MUTSIGS
-            for bw, co in TIME_BIN_CONFIGS[popmodel]
-        ] + [
-            f"{EVAL_DIR}/{sampling}/{popmodel}/{sampling}_{popmodel}_{mutsig}_time_bins_w{int(bw)}_c{int(co)}_long_bl.tsv"
-            for sampling in SAMPLING_TYPES
-            for popmodel in POP_MODELS
-            for mutsig in MUTSIGS
-            for bw, co in TIME_BIN_CONFIGS[popmodel]
-        ] + [
-            f"{EVAL_DIR}/{sampling}/{popmodel}/{sampling}_{popmodel}_{mutsig}_time_bins_w{int(bw)}_c{int(co)}_long_bl_per_tree.tsv"
             for sampling in SAMPLING_TYPES
             for popmodel in POP_MODELS
             for mutsig in MUTSIGS
@@ -651,8 +639,6 @@ rule compute_time_bins:
     output:
         tsv               = f"{EVAL_DIR}/{{sampling}}/{{popmodel}}/{{sampling}}_{{popmodel}}_{{mutsig}}_time_bins_w{{binw}}_c{{cutoff}}.tsv",
         per_tree_tsv      = f"{EVAL_DIR}/{{sampling}}/{{popmodel}}/{{sampling}}_{{popmodel}}_{{mutsig}}_time_bins_w{{binw}}_c{{cutoff}}_per_tree.tsv",
-        long_bl_tsv       = f"{EVAL_DIR}/{{sampling}}/{{popmodel}}/{{sampling}}_{{popmodel}}_{{mutsig}}_time_bins_w{{binw}}_c{{cutoff}}_long_bl.tsv",
-        long_bl_per_tree  = f"{EVAL_DIR}/{{sampling}}/{{popmodel}}/{{sampling}}_{{popmodel}}_{{mutsig}}_time_bins_w{{binw}}_c{{cutoff}}_long_bl_per_tree.tsv",
     wildcard_constraints:
         binw   = "|".join(sorted({str(int(bw)) for bw, co in _ALL_CONFIGS}, key=lambda x: -len(x))),
         cutoff = "|".join(sorted({str(int(co)) for bw, co in _ALL_CONFIGS}, key=lambda x: -len(x))),

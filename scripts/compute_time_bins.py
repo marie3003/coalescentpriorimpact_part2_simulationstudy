@@ -266,24 +266,12 @@ def main():
     n_nodes_per_bin  = {(bw, co): defaultdict(int) for bw, co in configs}
     n_trees_per_bin  = {(bw, co): defaultdict(set) for bw, co in configs}
 
-    # Parallel accumulators for nodes with bl_sim > 1 only
-    acc_long = {
-        (bw, co): {
-            model: {b: defaultdict(farr) for b in range(len(bins))}
-            for model in ("constcoal", "skyline")
-        }
-        for (bw, co), bins in all_bins.items()
-    }
-    n_nodes_per_bin_long = {(bw, co): defaultdict(int) for bw, co in configs}
-    n_trees_per_bin_long = {(bw, co): defaultdict(set) for bw, co in configs}
-
     PER_TREE_METRICS = [
         "bl_diff", "bl_rel_error", "bl_abs_rel_error", "bl_est", "bl_sim",
         "pop_diff", "pop_rel_error", "pop_abs_rel_error", "Ne_est", "Ne_true",
         "rate_diff", "rate_rel_error", "rate_abs_rel_error", "rate_est", "rate_true",
     ]
-    per_tree_rows      = []
-    per_tree_rows_long = []
+    per_tree_rows = []
 
     for _, rep_row in scenario_df.iterrows():
         tree_index = int(rep_row["tree_index"])
@@ -314,13 +302,6 @@ def main():
             }
             for key in configs
         }
-        rep_acc_long = {
-            key: {
-                model: {b: defaultdict(farr) for b in range(len(all_bins[key]))}
-                for model in ("constcoal", "skyline")
-            }
-            for key in configs
-        }
 
         # precompute bin assignment per node for each config (h_sim is fixed)
         bin_assignments = {
@@ -334,10 +315,6 @@ def main():
             for node_idx, bin_idx in node_bins.items():
                 n_nodes_per_bin[key][bin_idx] += 1
                 n_trees_per_bin[key][bin_idx].add(tree_index)
-                _, bl_sim_node, _, _ = sim_dict[node_idx]
-                if bl_sim_node > 1:
-                    n_nodes_per_bin_long[key][bin_idx] += 1
-                    n_trees_per_bin_long[key][bin_idx].add(tree_index)
                 h_sim, bl_sim, is_int, _ = sim_dict[node_idx]
                 Ne_true = true_traj(h_sim)
                 if is_int:
@@ -398,25 +375,6 @@ def main():
                         rep_acc[key][model][bin_idx]["rate_est"].append(1.0 / Ne_est if Ne_est else np.nan)
                         rep_acc[key][model][bin_idx]["rate_true"].append(1.0 / true_traj(h_sim) if true_traj(h_sim) else np.nan)
 
-                        if bl_sim > 1:
-                            for met, val in obs.items():
-                                if is_root and met.startswith("bl"):
-                                    continue
-                                if not np.isnan(val) and not np.isinf(val):
-                                    acc_long[key][model][bin_idx][met].append(val)
-                                    if met in PER_TREE_METRICS:
-                                        rep_acc_long[key][model][bin_idx][met].append(val)
-                            if not is_root:
-                                acc_long[key][model][bin_idx]["bl_est"].append(bl_est)
-                                rep_acc_long[key][model][bin_idx]["bl_est"].append(bl_est)
-                                rep_acc_long[key][model][bin_idx]["bl_sim"].append(bl_sim)
-                            acc_long[key][model][bin_idx]["Ne_est"].append(Ne_est)
-                            acc_long[key][model][bin_idx]["rate_est"].append(1.0 / Ne_est if Ne_est else np.nan)
-                            rep_acc_long[key][model][bin_idx]["Ne_est"].append(Ne_est)
-                            rep_acc_long[key][model][bin_idx]["Ne_true"].append(true_traj(h_sim))
-                            rep_acc_long[key][model][bin_idx]["rate_est"].append(1.0 / Ne_est if Ne_est else np.nan)
-                            rep_acc_long[key][model][bin_idx]["rate_true"].append(1.0 / true_traj(h_sim) if true_traj(h_sim) else np.nan)
-
                     if is_int:
                         node_h_est[node_idx].append(h_est)
                     if not is_root:
@@ -458,33 +416,11 @@ def main():
                     per_tree_rows.append(row)
         del rep_acc
 
-        for (bw, co), bins in all_bins.items():
-            key = (bw, co)
-            for model in ("constcoal", "skyline"):
-                for bin_idx, (b_lo, b_hi) in enumerate(bins):
-                    row = {
-                        "scenario":   scenario,
-                        "tree_index": tree_index,
-                        "model":      model,
-                        "bin_lower":  b_lo,
-                        "bin_upper":  b_hi if not np.isinf(b_hi) else np.nan,
-                        "bin_width":  bw,
-                        "cutoff":     co,
-                    }
-                    for met in PER_TREE_METRICS:
-                        med, lo, hi = summarize(rep_acc_long[key][model][bin_idx].get(met, []))
-                        row[f"{met}_median"]    = med
-                        row[f"{met}_hpd_lower"] = lo
-                        row[f"{met}_hpd_upper"] = hi
-                    per_tree_rows_long.append(row)
-        del rep_acc_long
-
         print(f"  Processed replicate T{tree_index}", flush=True)
 
     # Write one output file per config
     for (bw, co), bins in all_bins.items():
-        output_rows      = []
-        output_rows_long = []
+        output_rows = []
         for model in ("constcoal", "skyline"):
             for bin_idx, (b_lo, b_hi) in enumerate(bins):
                 t_acc = true_acc[(bw, co)][bin_idx]
@@ -519,32 +455,10 @@ def main():
                 row["bl_ci_coverage"]     = float(np.mean(bl_ci)) if len(bl_ci) > 0 else np.nan
                 output_rows.append(row)
 
-                # long-bl variant
-                row_long = {
-                    "scenario":   scenario,
-                    "model":      model,
-                    "bin_lower":  b_lo,
-                    "bin_upper":  b_hi if not np.isinf(b_hi) else np.nan,
-                    "bin_center": base["bin_center"],
-                    "n_nodes":    n_nodes_per_bin_long[(bw, co)].get(bin_idx, 0),
-                    "n_trees":    len(n_trees_per_bin_long[(bw, co)].get(bin_idx, set())),
-                }
-                bin_acc_long = acc_long[(bw, co)][model][bin_idx]
-                for met in EST_METRICS + METRICS:
-                    med, lo, hi = summarize(bin_acc_long.get(met, []))
-                    row_long[f"{met}_median"]    = med
-                    row_long[f"{met}_hpd_lower"] = lo
-                    row_long[f"{met}_hpd_upper"] = hi
-                output_rows_long.append(row_long)
-
         suffix   = f"w{int(bw)}_c{int(co)}"
         out_path = out_dir / f"{scenario}_time_bins_{suffix}.tsv"
         pd.DataFrame(output_rows).to_csv(out_path, sep="\t", index=False)
         print(f"  Written: {out_path} ({len(bins)} bins × 2 models)")
-
-        out_path_long = out_dir / f"{scenario}_time_bins_{suffix}_long_bl.tsv"
-        pd.DataFrame(output_rows_long).to_csv(out_path_long, sep="\t", index=False)
-        print(f"  Written: {out_path_long}")
 
     if per_tree_rows:
         per_tree_df = pd.DataFrame(per_tree_rows)
@@ -552,15 +466,6 @@ def main():
             suffix   = f"w{int(bw)}_c{int(co)}"
             sub      = per_tree_df[(per_tree_df["bin_width"] == bw) & (per_tree_df["cutoff"] == co)]
             out_path = out_dir / f"{scenario}_time_bins_{suffix}_per_tree.tsv"
-            sub.drop(columns=["bin_width", "cutoff"]).to_csv(out_path, sep="\t", index=False)
-            print(f"  Written: {out_path}")
-
-    if per_tree_rows_long:
-        per_tree_df_long = pd.DataFrame(per_tree_rows_long)
-        for (bw, co) in configs:
-            suffix   = f"w{int(bw)}_c{int(co)}"
-            sub      = per_tree_df_long[(per_tree_df_long["bin_width"] == bw) & (per_tree_df_long["cutoff"] == co)]
-            out_path = out_dir / f"{scenario}_time_bins_{suffix}_long_bl_per_tree.tsv"
             sub.drop(columns=["bin_width", "cutoff"]).to_csv(out_path, sep="\t", index=False)
             print(f"  Written: {out_path}")
 

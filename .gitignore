@@ -20,7 +20,6 @@ results/run1/evaluation/ltt_*.tsv
 results/run1/beast_inference/**/*.xml
 results/run1/evaluation/snp_counts/
 results/run1/evaluation/**/**/*node_errors.tsv
-results/run1/evaluation/**/**/*_per_tree.tsv
 
 results/run1/beast_inference/**/**/**/**/*.tree
 results/run1/beast_inference/**/**/**/**/*.xml
